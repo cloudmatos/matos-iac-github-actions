@@ -1,5 +1,5 @@
 # action.yml
-name: "MatosSphere Github Action"
+name: "MatosSphere GitHub Action"
 description: "Run MatosSphere scan against IaC projects"
 author: 'Cloudmatos'
 branding:
