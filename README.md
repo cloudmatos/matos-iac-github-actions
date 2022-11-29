@@ -10,7 +10,7 @@ MatosSphere GitHub Action
     - uses: actions/checkout@v3
     # Scan IaC with matos
     - name: run matos iac scan
-      uses: cloudmatos/matos-iac-github-actions@v0.2.0
+      uses: cloudmatos/matos-iac-github-actions@v0.3.0
       with:
         # scanning two directories: ./terraform/ ./cfn-templates/ plus a single file
         path: 'terraform,cfn-templates,my-other-sub-folder/Dockerfile'
