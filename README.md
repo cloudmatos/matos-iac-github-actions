@@ -10,13 +10,13 @@ MatosSphere GitHub Action
     - uses: actions/checkout@v3
     # Scan IaC with matos
     - name: run matos iac scan
-      uses: cloudmatos/matos-iac-github-actions@v0.3.0
+      uses: cloudmatos/matos-iac-github-actions@master
       with:
         # scanning two directories: ./terraform/ ./cfn-templates/ plus a single file
-        path: 'terraform,cfn-templates,my-other-sub-folder/Dockerfile'
-        output_path: matos-result/
+        scan_dir: 'terraform,cfn-templates,my-other-sub-folder/Dockerfile'
+        api_key: ${{ secrets.MATOS_API_KEY }}
     # Display the results in json format
     - name: display matos iac scan results
       run: |
-        cat matos-result/results.json
+        cat ./results.json
 ```
