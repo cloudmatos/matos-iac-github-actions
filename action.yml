@@ -9,9 +9,6 @@ inputs:
   scan_dir:
     description: 'scan_dir'
     required: true
-  git_url:
-    description: 'git_url'
-    required: true
   api_key:
     description: 'api_key'
     required: true
