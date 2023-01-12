@@ -34,4 +34,4 @@ jq -nc --argfile results "results.json" --arg git_url "$GIT_URL" '{$results,$git
     -H "Accept: application/json" \
     -H "X-Api-Key: $INPUT_API_KEY" \
     -H "Content-Type:application/json" \
-    -X POST -d @- "https://console.cloudmatos.dev/app/iac-scan/store"
+    -X POST -d @- "https://demo-backend.cloudmatos.com/app/iac-scan/store"
