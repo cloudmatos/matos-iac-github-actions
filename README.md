@@ -15,6 +15,7 @@ MatosSphere GitHub Action
         # scanning two directories: ./terraform/ ./cfn-templates/ plus a single file
         scan_dir: 'terraform,cfn-templates,my-other-sub-folder/Dockerfile'
         api_key: ${{ secrets.MATOS_API_KEY }}
+        tenant_id: ${{ secrets.MATOS_TENANT_ID }}
     # Display the results in json format
     - name: display matos iac scan results
       run: |

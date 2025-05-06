@@ -12,6 +12,9 @@ inputs:
   api_key:
     description: 'api_key'
     required: true
+  tenant_id:
+    description: 'tenant_id'
+    required: true
   username:
     description: 'Username'
     required: false
