@@ -1,6 +1,4 @@
 #!/bin/bash
-set -euo pipefail
-
 if [ ! -z $INPUT_USERNAME ];
 then echo $INPUT_PASSWORD | docker login $INPUT_REGISTRY -u $INPUT_USERNAME --password-stdin
 fi
