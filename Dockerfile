@@ -1,8 +1,8 @@
 FROM cloudmatos/matos-iac-scan:latest
 
-RUN apk add bash && \
-    apk add jq && \ 
-    apk add curl && apk add --upgrade curl
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends bash jq curl && \
+    rm -rf /var/lib/apt/lists/*
 
 COPY ./entrypoint.sh /entrypoint.sh
 
