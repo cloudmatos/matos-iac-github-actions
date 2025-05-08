@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 
 if [ ! -z $INPUT_USERNAME ];
 then echo $INPUT_PASSWORD | docker login $INPUT_REGISTRY -u $INPUT_USERNAME --password-stdin
@@ -43,33 +44,55 @@ CNAPP_URL="https://cnapp-api-srv-nginx-ingress-dev-789054540782.asia-southeast1.
 LOGIN_ENDPOINT="$UNIFY_URL/api/v1/access-keys/signin"
 COOKIE_JAR="$(mktemp)"
 
-# fetch cookies
-curl -s -I \
-     -H "x-matos-tid: $INPUT_TENANT_ID" \
-     -H "x-matos-aky: $INPUT_API_KEY" \
-     "$LOGIN_ENDPOINT" \
-     -c "$COOKIE_JAR" >/dev/null
+cleanup() {
+  rm -f "$COOKIE_JAR"
+}
+trap cleanup EXIT
 
-# POST to actually sign in & extract token
-resp="$(curl -s -X POST "$LOGIN_ENDPOINT" \
-    -b "$COOKIE_JAR" \
-    -H "x-matos-tid: $INPUT_TENANT_ID" \
-    -H "x-matos-aky: $INPUT_API_KEY" \
-    -c "$COOKIE_JAR" )"
+echo "🔍 INPUT_TENANT_ID = '$INPUT_TENANT_ID'"
+echo "🔍 INPUT_API_KEY    = '${INPUT_API_KEY:0:4}…'"
+echo "🔍 LOGIN_ENDPOINT  = '$LOGIN_ENDPOINT'"
+echo "🔍 COOKIE_JAR      = '$COOKIE_JAR'"
 
-user_token="$(printf '%s' "$resp" | jq -r '.token')"
-if [ -z "$user_token" ] || [ "$user_token" = "null" ]; then
-  echo "ERR failed to retrieve user token from $LOGIN_ENDPOINT"
-  echo "RESPONSE: $resp"
+echo "HEAD $LOGIN_ENDPOINT"
+head_status=$(curl -sSI \
+  -H "x-matos-tid: $INPUT_TENANT_ID" \
+  -H "x-matos-aky: $INPUT_API_KEY" \
+  -c "$COOKIE_JAR" \
+  "$LOGIN_ENDPOINT" \
+  | awk 'NR==1 {print $2}')
+echo "HEAD HTTP status: $head_status"
+if [[ "$head_status" != "200" ]]; then
+  echo "HEAD request failed with status $head_status"
   exit 1
 fi
 
-# -- 2) POST the scan results using Bearer auth --
+echo "POST $LOGIN_ENDPOINT"
+resp="$(curl -sSL \
+  -X POST "$LOGIN_ENDPOINT" \
+  -b "$COOKIE_JAR" \
+  -H "x-matos-tid: $INPUT_TENANT_ID" \
+  -H "x-matos-aky: $INPUT_API_KEY" \
+  -c "$COOKIE_JAR")"
+echo "   ↳ Response payload: $resp"
+
+user_token="$(jq -r '.token // empty' <<<"$resp")"
+if [[ -z "$user_token" ]]; then
+  echo "Failed to retrieve user token from $LOGIN_ENDPOINT"
+  echo "   Response was: $resp"
+  exit 1
+fi
+echo "Retrieved token: $user_token"
+
+# ————— 3) POST scan results with Bearer auth ———————————————————————
 STORE_ENDPOINT="$CNAPP_URL/cnapp/api/v1/workspaces/iac/findings"
-curl -i \
-     -H "Accept: application/json" \
-     -H "Authorization: Bearer $user_token" \
-     -H "Content-Type: application/json" \
-     -X POST \
-     --data-binary @payload.json \
-     "$STORE_ENDPOINT"
+echo "➡️  POST results to $STORE_ENDPOINT"
+curl -f -i \
+  -H "Accept: application/json" \
+  -H "Authorization: Bearer $user_token" \
+  -H "Content-Type: application/json" \
+  -X POST \
+  --data-binary @payload.json \
+  "$STORE_ENDPOINT"
+
+echo "Scan results submitted."
