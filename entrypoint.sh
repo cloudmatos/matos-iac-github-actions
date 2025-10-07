@@ -85,12 +85,38 @@ echo "Retrieved token: $user_token"
 # ————— 3) POST scan results with Bearer auth ———————————————————————
 STORE_ENDPOINT="$CNAPP_URL/cnapp/api/v1/workspaces/iac/findings"
 echo "POST results to $STORE_ENDPOINT"
-curl -f -i \
+
+# Debug: Show payload structure (first 500 chars)
+echo "=== PAYLOAD PREVIEW (first 500 chars) ==="
+head -c 500 payload.json
+echo ""
+echo "=== END PAYLOAD PREVIEW ==="
+
+# Debug: Show payload size
+payload_size=$(wc -c < payload.json)
+echo "Payload size: $payload_size bytes"
+
+# Store response
+echo "Sending POST request..."
+post_response=$(curl -w "\nHTTP_STATUS:%{http_code}" -i \
   -H "Accept: application/json" \
   -H "Authorization: Bearer $user_token" \
   -H "Content-Type: application/json" \
   -X POST \
   --data-binary @payload.json \
-  "$STORE_ENDPOINT"
+  "$STORE_ENDPOINT" 2>&1)
 
-echo "Scan results submitted."
+echo "=== POST RESPONSE ==="
+echo "$post_response"
+echo "=== END POST RESPONSE ==="
+
+# Extract HTTP status
+http_status=$(echo "$post_response" | grep "HTTP_STATUS:" | cut -d':' -f2)
+echo "HTTP Status: $http_status"
+
+if [[ "$http_status" != "200" && "$http_status" != "201" ]]; then
+  echo "ERROR: POST request failed with status $http_status"
+  exit 1
+fi
+
+echo "Scan results submitted successfully."
