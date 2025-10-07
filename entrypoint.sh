@@ -36,8 +36,8 @@ cd /app
 jq -nc --argfile results "./results.json" --arg git_url "$GIT_URL" \
     '{ data: $results, git_url: $git_url }' > payload.json
 
-UNIFY_URL="https://unify-api-srv-nginx-ingress-dev-789054540782.asia-southeast1.run.app"
-CNAPP_URL="https://cnapp-api-srv-nginx-ingress-dev-789054540782.asia-southeast1.run.app"
+UNIFY_URL="https://app-dev-api.cloudmatos.ai"
+CNAPP_URL="https://app-dev-api-cnapp.cloudmatos.ai"
 # -- 1) Authenticate to get Bearer token --
 LOGIN_ENDPOINT="$UNIFY_URL/api/v1/access-keys/signin"
 COOKIE_JAR="$(mktemp)"
@@ -47,10 +47,10 @@ cleanup() {
 }
 trap cleanup EXIT
 
-echo "🔍 INPUT_TENANT_ID = '$INPUT_TENANT_ID'"
-echo "🔍 INPUT_API_KEY    = '${INPUT_API_KEY:0:4}…'"
-echo "🔍 LOGIN_ENDPOINT  = '$LOGIN_ENDPOINT'"
-echo "🔍 COOKIE_JAR      = '$COOKIE_JAR'"
+echo "INPUT_TENANT_ID = '$INPUT_TENANT_ID'"
+echo "INPUT_API_KEY    = '${INPUT_API_KEY:0:4}…'"
+echo "LOGIN_ENDPOINT  = '$LOGIN_ENDPOINT'"
+echo "COOKIE_JAR      = '$COOKIE_JAR'"
 
 echo "HEAD $LOGIN_ENDPOINT"
 head_status=$(curl -sSI \
@@ -84,7 +84,7 @@ echo "Retrieved token: $user_token"
 
 # ————— 3) POST scan results with Bearer auth ———————————————————————
 STORE_ENDPOINT="$CNAPP_URL/cnapp/api/v1/workspaces/iac/findings"
-echo "➡️  POST results to $STORE_ENDPOINT"
+echo "POST results to $STORE_ENDPOINT"
 curl -f -i \
   -H "Accept: application/json" \
   -H "Authorization: Bearer $user_token" \
