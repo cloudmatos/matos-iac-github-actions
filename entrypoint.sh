@@ -48,6 +48,7 @@ cleanup() {
 trap cleanup EXIT
 
 echo "INPUT_TENANT_ID = '$INPUT_TENANT_ID'"
+echo "GIT_URL = '$GIT_URL'"
 echo "INPUT_API_KEY    = '${INPUT_API_KEY:0:4}…'"
 echo "LOGIN_ENDPOINT  = '$LOGIN_ENDPOINT'"
 echo "COOKIE_JAR      = '$COOKIE_JAR'"
