@@ -12,9 +12,10 @@ inputs:
   api_key:
     description: 'api_key'
     required: true
-  tenant_id:
-    description: 'tenant_id'
-    required: true
+  server_url:
+    description: 'Server URL'
+    default: 'https://app-api-cnapp.cloudmatos.ai'
+    required: false
   username:
     description: 'Username'
     required: false

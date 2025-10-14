@@ -12,11 +12,6 @@ if [ -z "$INPUT_API_KEY" ]; then
     exit 1
 fi
 
-if [ -z "$INPUT_TENANT_ID" ]; then
-    echo "${DATETIME} - ERR input api key can't be empty"
-    exit 1
-fi
-
 if [ -z "$INPUT_SCAN_DIR" ]; then
     echo "${DATETIME} - ERR input path can't be empty"
     exit 1
@@ -36,55 +31,12 @@ cd /app
 jq -nc --argfile results "./results.json" --arg git_url "$GIT_URL" \
     '{ data: $results, git_url: $git_url }' > payload.json
 
-UNIFY_URL="https://app-dev-api.cloudmatos.ai"
-CNAPP_URL="https://app-dev-api-cnapp.cloudmatos.ai"
-# -- 1) Authenticate to get Bearer token --
-LOGIN_ENDPOINT="$UNIFY_URL/api/v1/access-keys/signin"
-COOKIE_JAR="$(mktemp)"
-
-cleanup() {
-  rm -f "$COOKIE_JAR"
-}
-trap cleanup EXIT
-
-echo "INPUT_TENANT_ID = '$INPUT_TENANT_ID'"
 echo "GIT_URL = '$GIT_URL'"
 echo "INPUT_API_KEY    = '${INPUT_API_KEY:0:4}…'"
-echo "LOGIN_ENDPOINT  = '$LOGIN_ENDPOINT'"
-echo "COOKIE_JAR      = '$COOKIE_JAR'"
+echo "SERVER_URL      = '$INPUT_SERVER_URL'"
 
-echo "HEAD $LOGIN_ENDPOINT"
-head_status=$(curl -sSI \
-  -H "x-matos-tid: $INPUT_TENANT_ID" \
-  -H "x-matos-aky: $INPUT_API_KEY" \
-  -c "$COOKIE_JAR" \
-  "$LOGIN_ENDPOINT" \
-  | awk 'NR==1 {print $2}')
-echo "HEAD HTTP status: $head_status"
-if [[ "$head_status" != "200" ]]; then
-  echo "HEAD request failed with status $head_status"
-  exit 1
-fi
-
-echo "POST $LOGIN_ENDPOINT"
-resp="$(curl -sSL \
-  -X POST "$LOGIN_ENDPOINT" \
-  -b "$COOKIE_JAR" \
-  -H "x-matos-tid: $INPUT_TENANT_ID" \
-  -H "x-matos-aky: $INPUT_API_KEY" \
-  -c "$COOKIE_JAR")"
-echo "   ↳ Response payload: $resp"
-
-user_token="$(jq -r '.token // empty' <<<"$resp")"
-if [[ -z "$user_token" ]]; then
-  echo "Failed to retrieve user token from $LOGIN_ENDPOINT"
-  echo "   Response was: $resp"
-  exit 1
-fi
-echo "Retrieved token: $user_token"
-
-# ————— 3) POST scan results with Bearer auth ———————————————————————
-STORE_ENDPOINT="$CNAPP_URL/cnapp/api/v1/workspaces/iac/findings"
+# ————— POST scan results with API Key ———————————————————————
+STORE_ENDPOINT="$INPUT_SERVER_URL/cnapp/api/v1/workspaces/iac/findings"
 echo "POST results to $STORE_ENDPOINT"
 
 # Debug: Show payload structure (first 500 chars)
@@ -101,7 +53,7 @@ echo "Payload size: $payload_size bytes"
 echo "Sending POST request..."
 post_response=$(curl -w "\nHTTP_STATUS:%{http_code}" -i \
   -H "Accept: application/json" \
-  -H "Authorization: Bearer $user_token" \
+  -H "X-API-Key: $INPUT_API_KEY" \
   -H "Content-Type: application/json" \
   -X POST \
   --data-binary @payload.json \
