@@ -36,7 +36,7 @@ echo "INPUT_API_KEY    = '${INPUT_API_KEY:0:4}…'"
 echo "SERVER_URL      = '$INPUT_SERVER_URL'"
 
 # ————— POST scan results with API Key ———————————————————————
-STORE_ENDPOINT="$INPUT_SERVER_URL/cnapp/api/v1/workspaces/iac/findings"
+STORE_ENDPOINT="$INPUT_SERVER_URL/cnapp/public-iac/api/v1/findings"
 echo "POST results to $STORE_ENDPOINT"
 
 # Debug: Show payload structure (first 500 chars)
